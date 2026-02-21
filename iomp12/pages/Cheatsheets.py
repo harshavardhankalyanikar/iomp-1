@@ -1,6 +1,5 @@
 import streamlit as st
 from utils.db import get_supabase
-
 st.set_page_config(page_title="Cheatsheets", page_icon="📄", layout="wide")
 
 st.markdown("""

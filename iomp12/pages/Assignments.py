@@ -1,6 +1,5 @@
 import streamlit as st
 from utils.db import get_supabase
-
 st.set_page_config(page_title="Assignments", page_icon="📝", layout="wide")
 
 st.markdown("""
@@ -90,7 +89,7 @@ st.markdown(f"""
 
 # ─── AI Generate Section ───────────────────────────────
 if ai_generate:
-    st.markdown("### 🤖 Generate AI Assignment (CCBP Style)")
+    st.markdown("### 🤖 Generate AI Assignment")
     
     col_d, col_b = st.columns([2, 1])
     with col_d:
@@ -102,7 +101,7 @@ if ai_generate:
         generate_btn = st.button("⚡ Generate Assignment", type="primary", use_container_width=True)
     
     if generate_btn:
-        with st.spinner("🤖 Generating CCBP-style assignment with Claude AI..."):
+        with st.spinner("🤖 Generating assignment with AI..."):
             try:
                 from utils.ai_assignments import generate_assignment
                 assignment = generate_assignment(selected_topic_name, subject_choice, difficulty)
@@ -208,11 +207,15 @@ else:
             lang_hint = "# Python solution" if subject_choice == "Python" else "// C++ solution\n#include <iostream>\nusing namespace std;\n\nint main() {\n    // Write your code here\n    return 0;\n}"
             default_code = sub["code"] if sub else lang_hint
             
+            # Use session state value if exists, else default
+            area_key = f"code_{a['id']}"
+            if area_key not in st.session_state:
+                st.session_state[area_key] = default_code
+
             code = st.text_area(
-                "Write your code here:", 
-                value=default_code, 
-                height=250, 
-                key=f"code_{a['id']}",
+                "Write your code here:",
+                height=250,
+                key=area_key,
                 help="Write your solution in the box above"
             )
             
@@ -266,5 +269,7 @@ else:
                                 st.error(f"Evaluation failed: {e}")
             with col_clr:
                 if st.button("🗑 Clear", key=f"clear_{a['id']}", use_container_width=True):
-                    st.session_state[f"code_{a['id']}"] = lang_hint
+                    # Delete the key first before rerun so widget reinitializes cleanly
+                    if f"code_{a['id']}" in st.session_state:
+                        del st.session_state[f"code_{a['id']}"]
                     st.rerun()

@@ -88,9 +88,20 @@ st.markdown("""
     .pill-rest    { background:#f1f5f9; color:#475569; }
 
     .progress-subject {
-        background: white; border-radius: 14px;
-        padding: 1.5rem; box-shadow: 0 3px 15px rgba(0,0,0,0.07);
+        background: #1a1a2e;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 14px;
+        padding: 1.5rem;
+        box-shadow: 0 3px 20px rgba(0,0,0,0.3);
         margin-bottom: 1rem;
+        color: white !important;
+    }
+    .progress-subject h3 { color: white !important; }
+    .progress-subject span { color: rgba(255,255,255,0.75) !important; }
+    .progress-subject strong { color: white !important; }
+    .progress-track {
+        background: rgba(255,255,255,0.1); border-radius: 999px;
+        height: 12px; margin: 8px 0; overflow: hidden;
     }
     .progress-track {
         background: #f1f5f9; border-radius: 999px;
@@ -456,11 +467,9 @@ Type can be: "study", "revision", "rest", "exam"
 # ═══════════════════════════════════════════════════════
 # TABS
 # ═══════════════════════════════════════════════════════
-tab1, tab2, tab3, tab4 = st.tabs([
+tab1, tab2 = st.tabs([
     "📊 Progress Overview",
-    "🔥 Streaks & Activity",
-    "🗓 AI Study Plan",
-    "💡 Insights"
+    "🗓 AI Study Plan"
 ])
 
 # ═══════════════════════════════════════════════════════
@@ -571,134 +580,11 @@ with tab1:
         st.info("Install pandas for charts: `pip install pandas`")
 
 
-# ═══════════════════════════════════════════════════════
-# TAB 2 — STREAKS & ACTIVITY
-# ═══════════════════════════════════════════════════════
-with tab2:
-    st.markdown('<div class="section-title">🔥 Streaks & Activity</div>', unsafe_allow_html=True)
-
-    streak, active_dates = get_streak(student["id"])
-
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown(f"""
-        <div class="streak-card">
-            <div style="font-size:1rem;opacity:0.9;">🔥 Current Streak</div>
-            <div class="streak-number">{streak}</div>
-            <div style="font-size:0.9rem;opacity:0.85;">days in a row</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col2:
-        longest = 0
-        cur = 0
-        if active_dates:
-            cur = 1; longest = 1
-            for i in range(1, len(active_dates)):
-                if (active_dates[i] - active_dates[i-1]).days == 1:
-                    cur += 1; longest = max(longest, cur)
-                else:
-                    cur = 1
-        st.markdown(f"""
-        <div class="streak-card" style="background:linear-gradient(135deg,#a18cd1,#fbc2eb);">
-            <div style="font-size:1rem;opacity:0.9;">🏆 Longest Streak</div>
-            <div class="streak-number">{longest}</div>
-            <div style="font-size:0.9rem;opacity:0.85;">days record</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col3:
-        st.markdown(f"""
-        <div class="streak-card" style="background:linear-gradient(135deg,#43e97b,#38f9d7);">
-            <div style="font-size:1rem;opacity:0.9;">📅 Total Active Days</div>
-            <div class="streak-number">{len(active_dates)}</div>
-            <div style="font-size:0.9rem;opacity:0.85;">days studied</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.write("")
-
-    # Streak encouragement
-    if streak == 0:
-        st.warning("😴 No activity today yet! Start studying to begin your streak.")
-    elif streak < 3:
-        st.info(f"🌱 Great start! {streak} day streak — keep going to build momentum!")
-    elif streak < 7:
-        st.success(f"🔥 {streak} day streak! You're building a great habit!")
-    elif streak < 14:
-        st.success(f"⚡ {streak} days strong! You're on fire! Don't break the chain!")
-    else:
-        st.success(f"🏆 LEGENDARY! {streak} day streak! You're unstoppable!")
-
-    # Activity heatmap (last 4 weeks)
-    st.markdown('<div class="section-title">📅 Activity Calendar (Last 4 Weeks)</div>',
-                unsafe_allow_html=True)
-
-    today = date.today()
-    start_cal = today - timedelta(days=27)
-    active_set = set(active_dates)
-
-    days_of_week = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    header_html = "".join([f'<div class="cal-day cal-header">{d}</div>' for d in days_of_week])
-
-    cells = []
-    # Pad to start on Monday
-    pad = start_cal.weekday()
-    for _ in range(pad):
-        cells.append('<div class="cal-day"></div>')
-
-    for i in range(28):
-        d = start_cal + timedelta(days=i)
-        if d == today:
-            css = "cal-today"
-            label = "●"
-        elif d in active_set:
-            css = "cal-active"
-            label = "✓"
-        else:
-            css = "cal-inactive"
-            label = str(d.day)
-        cells.append(f'<div class="cal-day {css}" title="{d.strftime("%b %d")}">{label}</div>')
-
-    cells_html = "".join(cells)
-    st.markdown(f"""
-    <div style="background:white;border-radius:14px;padding:1.2rem;box-shadow:0 3px 15px rgba(0,0,0,0.07);">
-        <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px;">
-            <span style="font-size:13px;">
-                <span style="background:#667eea;color:white;padding:2px 8px;border-radius:4px;">✓</span> Active
-            </span>
-            <span style="font-size:13px;">
-                <span style="background:#f5576c;color:white;padding:2px 8px;border-radius:4px;">●</span> Today
-            </span>
-            <span style="font-size:13px;">
-                <span style="background:#f1f5f9;color:#94a3b8;padding:2px 8px;border-radius:4px;">N</span> Inactive
-            </span>
-        </div>
-        <div class="calendar-grid">
-            {header_html}
-            {cells_html}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Weekly activity line chart
-    st.markdown('<div class="section-title">📈 Weekly Activity</div>', unsafe_allow_html=True)
-    try:
-        import pandas as pd
-        week_data = {}
-        for i in range(8):
-            week_start = today - timedelta(days=today.weekday() + 7 * i)
-            count = sum(1 for d in active_set if week_start <= d < week_start + timedelta(days=7))
-            week_data[f"W-{i}"] = count
-        week_df = pd.DataFrame({"Active Days": list(reversed(list(week_data.values())))},
-                               index=list(reversed(list(week_data.keys()))))
-        st.line_chart(week_df, height=200)
-    except:
-        pass
-
 
 # ═══════════════════════════════════════════════════════
 # TAB 3 — AI STUDY PLAN
 # ═══════════════════════════════════════════════════════
-with tab3:
+with tab2:
     st.markdown('<div class="section-title">🗓 Generate Your AI Study Plan</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns([2, 1])
@@ -892,120 +778,3 @@ with tab3:
             file_name="my_study_plan.txt",
             mime="text/plain"
         )
-
-
-# ═══════════════════════════════════════════════════════
-# TAB 4 — INSIGHTS
-# ═══════════════════════════════════════════════════════
-with tab4:
-    st.markdown('<div class="section-title">💡 Smart Insights</div>', unsafe_allow_html=True)
-
-    if "progress_data" not in st.session_state:
-        with st.spinner("Analyzing your progress..."):
-            st.session_state.progress_data = get_progress_data(student["id"], enrolled)
-
-    pd_data = st.session_state.progress_data
-    streak_val, _ = get_streak(student["id"])
-
-    # Auto insights
-    insights = []
-
-    for subj, d in pd_data.items():
-        pct_v = int(d["completed_videos"] / d["total_videos"] * 100) if d["total_videos"] else 0
-        pct_a = int(d["completed_assignments"] / d["total_assignments"] * 100) if d["total_assignments"] else 0
-
-        if pct_v == 0:
-            insights.append(("🚨", f"You haven't watched any {subj} videos yet. Start with Topic 1!", "red"))
-        elif pct_v < 30:
-            insights.append(("⚠️", f"{subj}: Only {pct_v}% of videos done. Try to watch 2 videos daily.", "orange"))
-        elif pct_v >= 80:
-            insights.append(("✅", f"Great job on {subj} videos! {pct_v}% done. Focus on assignments now.", "green"))
-
-        if pct_a < pct_v - 20:
-            insights.append(("📝", f"{subj}: Your assignments are lagging behind videos. Catch up on practice!", "orange"))
-
-        # Find weakest topic
-        weak = [t for t in d["topics"] if t["total_videos"] > 0 and t["completed_videos"] == 0]
-        if weak:
-            insights.append(("🎯", f"{subj}: '{weak[0]['title']}' hasn't been started. Prioritize it!", "blue"))
-
-    if streak_val == 0:
-        insights.append(("💤", "No study activity recorded today. Even 20 minutes counts!", "orange"))
-    elif streak_val >= 7:
-        insights.append(("🏆", f"Amazing! {streak_val}-day streak! You're in the top tier of learners.", "green"))
-
-    total_done = sum(d["completed_videos"] + d["completed_assignments"] for d in pd_data.values())
-    total_all  = sum(d["total_videos"] + d["total_assignments"] for d in pd_data.values())
-    if total_all > 0:
-        overall = int(total_done / total_all * 100)
-        if overall >= 75:
-            insights.append(("🎉", f"You're {overall}% done overall! You're almost ready for the exam!", "green"))
-        elif overall >= 50:
-            insights.append(("💪", f"Halfway there at {overall}%! Keep the momentum going.", "blue"))
-
-    if not insights:
-        insights.append(("🌟", "Keep up the great work! Stay consistent every day.", "green"))
-
-    color_map = {
-        "red":    "#fef2f2",
-        "orange": "#fffbeb",
-        "green":  "#f0fdf4",
-        "blue":   "#eff6ff"
-    }
-    border_map = {
-        "red": "#ef4444", "orange": "#f59e0b",
-        "green": "#22c55e", "blue": "#3b82f6"
-    }
-    grad_map = {
-        "red":    "linear-gradient(135deg,rgba(239,68,68,0.12),rgba(239,68,68,0.04))",
-        "orange": "linear-gradient(135deg,rgba(245,158,11,0.12),rgba(245,158,11,0.04))",
-        "green":  "linear-gradient(135deg,rgba(34,197,94,0.12),rgba(34,197,94,0.04))",
-        "blue":   "linear-gradient(135deg,rgba(59,130,246,0.12),rgba(59,130,246,0.04))",
-    }
-    for icon, msg, color in insights:
-        grad   = grad_map.get(color, grad_map["blue"])
-        border = border_map.get(color, "#667eea")
-        st.markdown(f"""
-        <div class="insight-alert" style="background:{grad};border-left:4px solid {border};">
-            <span class="insight-icon">{icon}</span>
-            <span class="insight-text">{msg}</span>
-        </div>
-        """, unsafe_allow_html=True)
-    # Plan insights from AI if available
-    if "study_plan" in st.session_state and st.session_state.study_plan.get("insights"):
-        st.markdown('<div class="section-title">🤖 AI Recommendations</div>', unsafe_allow_html=True)
-        for ins in st.session_state.study_plan["insights"]:
-            st.markdown(f"""
-            <div class="insight-card">
-                🤖 {ins}
-            </div>
-            """, unsafe_allow_html=True)
-
-    # Completion ETA
-    st.markdown('<div class="section-title">⏱ Estimated Completion</div>', unsafe_allow_html=True)
-
-    for subj, d in pd_data.items():
-        remaining_v = d["total_videos"] - d["completed_videos"]
-        remaining_a = d["total_assignments"] - d["completed_assignments"]
-        # Assume 2 videos/day and 1 assignment/day
-        days_needed = max(remaining_v // 2, remaining_a)
-        eta = date.today() + timedelta(days=days_needed)
-
-        icon = "🐍" if subj == "Python" else "⚡"
-        st.markdown(f"""
-        <div style="background:white;border-radius:12px;padding:1rem 1.2rem;
-                    box-shadow:0 2px 10px rgba(0,0,0,0.06);margin-bottom:0.6rem;
-                    display:flex;justify-content:space-between;align-items:center;">
-            <div><strong>{icon} {subj}</strong><br>
-                <span style="color:#64748b;font-size:13px;">
-                    {remaining_v} videos + {remaining_a} assignments remaining
-                </span>
-            </div>
-            <div style="text-align:right;">
-                <div style="font-size:1.1rem;font-weight:700;color:#667eea;">
-                    ~{days_needed} days
-                </div>
-                <div style="font-size:12px;color:#94a3b8;">ETA: {eta.strftime('%d %b %Y')}</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
